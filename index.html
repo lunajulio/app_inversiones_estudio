@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Potencial de inversión — Tablero de hallazgos</title>
+<style>
+  :root{
+    --blanco:#F1F1F1; --negro:#2E2929; --amarillo:#FFD400; --naranja:#FF8120;
+    --violeta:#A35BCF; --azul:#1DB8D3; --verde:#14C48A; --rosa:#EFA6C2;
+
+    --bg:var(--blanco); --bg-elevated:#FFFFFF; --bg-sunken:#E7E5E1;
+    --ink:var(--negro); --ink-soft:rgba(46,41,41,.64); --ink-faint:rgba(46,41,41,.40);
+    --border:rgba(46,41,41,.13); --border-strong:rgba(46,41,41,.22);
+    --shadow:0 1px 2px rgba(46,41,41,.05), 0 10px 28px -16px rgba(46,41,41,.28);
+
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+    --font-body: 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
+    --font-mono: 'Cascadia Mono', 'Cascadia Code', Consolas, 'SF Mono', 'Roboto Mono', monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1E1A1A; --bg-elevated:#2A2525; --bg-sunken:#241F1F;
+      --ink:#F1F1F1; --ink-soft:rgba(241,241,241,.70); --ink-faint:rgba(241,241,241,.44);
+      --border:rgba(241,241,241,.14); --border-strong:rgba(241,241,241,.24);
+      --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 28px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1E1A1A; --bg-elevated:#2A2525; --bg-sunken:#241F1F;
+    --ink:#F1F1F1; --ink-soft:rgba(241,241,241,.70); --ink-faint:rgba(241,241,241,.44);
+    --border:rgba(241,241,241,.14); --border-strong:rgba(241,241,241,.24);
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 28px -16px rgba(0,0,0,.6);
+  }
+  :root[data-theme="light"]{
+    --bg:var(--blanco); --bg-elevated:#FFFFFF; --bg-sunken:#E7E5E1;
+    --ink:var(--negro); --ink-soft:rgba(46,41,41,.64); --ink-faint:rgba(46,41,41,.40);
+    --border:rgba(46,41,41,.13); --border-strong:rgba(46,41,41,.22);
+    --shadow:0 1px 2px rgba(46,41,41,.05), 0 10px 28px -16px rgba(46,41,41,.28);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{transition:none !important; animation:none !important;} }
+
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body);
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  main{max-width:1180px; margin:0 auto; padding:0 28px 96px;}
+  a{color:inherit;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:700; text-wrap:balance; margin:0;}
+  p{margin:0;}
+  .eyebrow{font-family:var(--font-mono); font-size:.72rem; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-faint);}
+  .lede{max-width:66ch; color:var(--ink-soft); font-size:.98rem;}
+  ::selection{background:var(--amarillo); color:var(--negro);}
+  :focus-visible{outline:2px solid var(--azul); outline-offset:2px; border-radius:3px;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:40; background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width:1180px; margin:0 auto; padding:14px 28px; display:flex; align-items:center;
+    gap:22px; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:baseline; gap:10px; white-space:nowrap;}
+  .brand .mark{width:11px; height:11px; border-radius:3px; background:var(--azul); display:inline-block; transform:rotate(45deg);}
+  .brand-name{font-family:var(--font-display); font-weight:700; font-size:1.05rem;}
+  .brand-tag{font-family:var(--font-mono); font-size:.7rem; color:var(--ink-faint); letter-spacing:.04em;}
+  nav.pipeline-nav{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none;}
+  nav.pipeline-nav::-webkit-scrollbar{display:none;}
+  nav.pipeline-nav a{
+    font-size:.82rem; padding:7px 12px; border-radius:7px; white-space:nowrap; color:var(--ink-soft);
+    text-decoration:none; font-weight:600;
+  }
+  nav.pipeline-nav a:hover{background:var(--bg-sunken); color:var(--ink);}
+  nav.pipeline-nav a.active{background:var(--azul); color:#06282e;}
+  .theme-btn{
+    border:1px solid var(--border-strong); background:var(--bg-elevated); color:var(--ink);
+    width:34px; height:34px; border-radius:8px; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; flex:0 0 auto; font-size:.95rem;
+  }
+  .theme-btn:hover{border-color:var(--azul);}
+
+  /* ---------- hero ---------- */
+  .hero{padding:52px 0 8px;}
+  .hero h1{font-size:clamp(1.7rem, 2.6vw, 2.5rem); max-width:20ch; letter-spacing:-.01em;}
+  .hero .lede{margin-top:14px; font-size:1.02rem;}
+  .kpi-grid{
+    margin-top:34px; display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:14px;
+  }
+  .kpi-card{
+    background:var(--bg-elevated); border:1px solid var(--border); border-radius:12px; padding:20px 20px 18px;
+    box-shadow:var(--shadow); border-top:3px solid var(--kpi-c, var(--azul));
+  }
+  .kpi-card .eyebrow{margin-bottom:9px;}
+  .kpi-num{font-family:var(--font-mono); font-weight:600; font-size:1.9rem; letter-spacing:-.01em; font-variant-numeric:tabular-nums; color:var(--kpi-c, var(--azul));}
+  .kpi-sub{margin-top:6px; font-size:.82rem; color:var(--ink-soft);}
+
+  /* ---------- sections ---------- */
+  section{padding:64px 0; border-top:1px solid var(--border);}
+  section:first-of-type{border-top:none;}
+  .section-head{display:flex; flex-direction:column; gap:10px; margin-bottom:30px; max-width:74ch;}
+  .section-head h2{font-size:clamp(1.35rem,2vw,1.7rem);}
+  .card{
+    background:var(--bg-elevated); border:1px solid var(--border); border-radius:12px; padding:22px 24px;
+    box-shadow:var(--shadow);
+  }
+  .grid-2{display:grid; grid-template-columns:1.1fr .9fr; gap:18px;}
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media (max-width:860px){ .grid-2, .grid-3{grid-template-columns:1fr;} }
+
+  /* ---------- pipeline steps ---------- */
+  .steps{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  @media (max-width:860px){ .steps{grid-template-columns:1fr;} }
+  .step{
+    background:var(--bg-elevated); border:1px solid var(--border); border-radius:12px; padding:20px;
+    box-shadow:var(--shadow); position:relative; display:flex; flex-direction:column; gap:8px;
+  }
+  .step .num{font-family:var(--font-mono); font-size:.78rem; color:var(--step-c); font-weight:700;}
+  .step h3{font-size:1.02rem; font-family:var(--font-body); font-weight:700;}
+  .step p{font-size:.85rem; color:var(--ink-soft);}
+  .step .tag{
+    align-self:flex-start; font-family:var(--font-mono); font-size:.68rem; letter-spacing:.04em;
+    padding:3px 8px; border-radius:5px; background:color-mix(in srgb, var(--step-c) 16%, transparent);
+    color:var(--step-c);
+  }
+  .step-arrow{display:none;}
+
+  /* ---------- bar chart component ---------- */
+  .barlist{display:flex; flex-direction:column; gap:11px;}
+  .barrow{display:grid; grid-template-columns:190px 1fr 58px; align-items:center; gap:12px;}
+  .barrow .label{font-size:.83rem; color:var(--ink-soft);}
+  .barrow .label b{color:var(--ink); font-weight:600;}
+  .bartrack{position:relative; height:11px; background:var(--bg-sunken); border-radius:6px; overflow:hidden;}
+  .barfill{position:absolute; inset:0; width:var(--w); border-radius:6px; background:var(--bar-c, var(--azul));}
+  .barrow .val{font-family:var(--font-mono); font-size:.82rem; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink);}
+  @media (max-width:600px){ .barrow{grid-template-columns:110px 1fr 50px;} }
+  .barlist.wide .barrow{grid-template-columns:250px 1fr 60px;}
+  @media (max-width:700px){ .barlist.wide .barrow{grid-template-columns:1fr; row-gap:4px;} }
+
+  /* paired comparison bars */
+  .cmp-block{display:flex; flex-direction:column; gap:6px; margin-bottom:18px;}
+  .cmp-title{font-size:.86rem; font-weight:600; margin-bottom:2px;}
+  .cmp-row{display:grid; grid-template-columns:84px 1fr 52px; align-items:center; gap:10px;}
+  .cmp-row .tag{font-size:.72rem; color:var(--ink-faint); font-family:var(--font-mono);}
+  .cmp-row .val{font-family:var(--font-mono); font-size:.8rem; text-align:right; font-variant-numeric:tabular-nums;}
+
+  /* stacked composition bar */
+  .stack{display:flex; height:34px; border-radius:8px; overflow:hidden; border:1px solid var(--border);}
+  .stack span{display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:.72rem; color:#fff;}
+  .stack-legend{display:flex; flex-wrap:wrap; gap:16px; margin-top:12px;}
+  .stack-legend .item{display:flex; align-items:center; gap:7px; font-size:.8rem; color:var(--ink-soft);}
+  .stack-legend .dot{width:9px; height:9px; border-radius:2px;}
+
+  /* range / CI viz */
+  .range-wrap{margin:14px 0 6px;}
+  .range-label{display:flex; justify-content:space-between; font-size:.82rem; margin-bottom:6px;}
+  .range-label .name{font-weight:600;}
+  .range-label .pt{font-family:var(--font-mono); color:var(--ink-soft);}
+  .range-viz{position:relative; height:26px; background:var(--bg-sunken); border-radius:7px;}
+  .range-fill{position:absolute; top:0; bottom:0; background:color-mix(in srgb, var(--range-c, var(--azul)) 32%, transparent); border-radius:7px;}
+  .range-point{position:absolute; top:-3px; bottom:-3px; width:3px; background:var(--range-c, var(--azul)); border-radius:2px;}
+  .range-scale{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:.68rem; color:var(--ink-faint); margin-top:5px;}
+
+  /* callouts */
+  .callout{border-radius:10px; padding:16px 18px; display:flex; gap:12px; font-size:.87rem; border:1px solid; margin-top:16px;}
+  .callout.warn{background:color-mix(in srgb, var(--naranja) 10%, var(--bg-elevated)); border-color:color-mix(in srgb, var(--naranja) 40%, transparent);}
+  .callout.info{background:color-mix(in srgb, var(--azul) 10%, var(--bg-elevated)); border-color:color-mix(in srgb, var(--azul) 40%, transparent);}
+  .callout .icon{font-size:1.05rem; line-height:1; flex:0 0 auto;}
+  .callout p{color:var(--ink-soft);}
+  .callout b{color:var(--ink);}
+
+  /* metric strip inside model cards */
+  .metric-strip{display:flex; flex-wrap:wrap; gap:22px; margin:4px 0 20px;}
+  .metric{display:flex; flex-direction:column; gap:3px;}
+  .metric .n{font-family:var(--font-mono); font-size:1.35rem; font-weight:600; color:var(--metric-c, var(--azul)); font-variant-numeric:tabular-nums;}
+  .metric .lbl{font-size:.75rem; color:var(--ink-faint);}
+
+  h3.subhead{font-size:.98rem; font-family:var(--font-body); font-weight:700; margin-bottom:12px;}
+
+  /* ---------- accordions (supuestos) ---------- */
+  .acc{border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--bg-elevated); margin-bottom:12px; box-shadow:var(--shadow);}
+  .acc summary{
+    cursor:pointer; list-style:none; padding:16px 20px; display:flex; align-items:center; gap:12px;
+    font-weight:700; font-size:.95rem;
+  }
+  .acc summary::-webkit-details-marker{display:none;}
+  .acc summary .chev{margin-left:auto; font-family:var(--font-mono); color:var(--ink-faint); transition:transform .15s ease;}
+  .acc[open] summary .chev{transform:rotate(90deg);}
+  .acc summary .badge{
+    width:8px; height:8px; border-radius:50%; background:var(--acc-c, var(--azul)); flex:0 0 auto;
+  }
+  .acc-body{padding:0 20px 18px 40px;}
+  .acc-body ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:9px;}
+  .acc-body li{font-size:.87rem; color:var(--ink-soft);}
+  .acc-body li b{color:var(--ink); font-weight:600;}
+
+  /* ---------- limitaciones list ---------- */
+  .lim-list{display:flex; flex-direction:column; gap:14px;}
+  .lim-item{display:flex; gap:14px; align-items:flex-start;}
+  .lim-item .lim-mark{
+    flex:0 0 auto; width:26px; height:26px; border-radius:7px; background:color-mix(in srgb, var(--naranja) 18%, transparent);
+    color:var(--naranja); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:.78rem; font-weight:700;
+  }
+  .lim-item p{font-size:.9rem; color:var(--ink-soft);}
+  .lim-item b{color:var(--ink);}
+
+  /* ---------- recomendaciones ---------- */
+  .rec-col{border-radius:12px; padding:22px 24px; border:1px solid var(--border); background:var(--bg-elevated); box-shadow:var(--shadow);}
+  .rec-col h3{font-family:var(--font-body); font-size:1.02rem; display:flex; align-items:center; gap:9px; margin-bottom:16px;}
+  .rec-col .dot{width:10px; height:10px; border-radius:50%;}
+  .rec-col ol{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:12px;}
+  .rec-col li{font-size:.88rem; color:var(--ink-soft);}
+  .rec-col li b{color:var(--ink);}
+  .rec-col.tech{border-top:3px solid var(--azul);}
+  .rec-col.biz{border-top:3px solid var(--verde);}
+
+  footer{border-top:1px solid var(--border); padding:28px 28px 60px; max-width:1180px; margin:0 auto;}
+  footer p{font-size:.78rem; color:var(--ink-faint);}
+
+  table.data{border-collapse:collapse; width:100%; font-size:.85rem;}
+  table.data th, table.data td{padding:9px 12px; text-align:left; border-bottom:1px solid var(--border);}
+  table.data th{font-family:var(--font-mono); font-size:.7rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); font-weight:600;}
+  table.data td.num{font-family:var(--font-mono); text-align:right; font-variant-numeric:tabular-nums;}
+  .table-wrap{overflow-x:auto;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="mark"></span>
+      <span class="brand-name">Potencial de inversión</span>
+      <span class="brand-tag">CREAN</span>
+    </div>
+    <nav class="pipeline-nav" id="pipelineNav">
+      <a href="#resumen">Resumen</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#segmentacion">Segmentación</a>
+      <a href="#propension">Propensión</a>
+      <a href="#monto">Monto potencial</a>
+      <a href="#oportunidad">Oportunidad</a>
+      <a href="#supuestos">Supuestos</a>
+      <a href="#limitaciones">Limitaciones</a>
+      <a href="#recomendaciones">Recomendaciones</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema" title="Cambiar tema claro/oscuro">◐</button>
+  </div>
+</div>
+
+<main>
+
+  <section id="resumen" class="hero">
+    <p class="eyebrow">Estudio de propensión y monto potencial de inversión</p>
+    <h1>Quién va a invertir, y cuánto: leído desde el comportamiento, no desde el perfil.</h1>
+    <p class="lede">Dos modelos, entrenados sobre 860,223 clientes y ~13 meses de historia, se combinan para estimar el valor esperado de negocio a doce meses: uno predice la probabilidad de adopción, el otro el monto. Este tablero resume los hallazgos, los supuestos que los sostienen y sus límites.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--kpi-c:var(--amarillo)">
+        <p class="eyebrow">Oportunidad total · 12 meses</p>
+        <div class="kpi-num">$3.88 B</div>
+        <p class="kpi-sub">Rango 95%: $3.79B – $3.97B COP</p>
+      </div>
+      <div class="kpi-card" style="--kpi-c:var(--violeta)">
+        <p class="eyebrow">Concentrada en el decil 10</p>
+        <div class="kpi-num">63%</div>
+        <p class="kpi-sub">$2.43B en ~80,000 clientes prioritarios</p>
+      </div>
+      <div class="kpi-card" style="--kpi-c:var(--azul)">
+        <p class="eyebrow">Lift del modelo de propensión</p>
+        <div class="kpi-num">8.7×</div>
+        <p class="kpi-sub">vs. elegir al azar, en el decil superior</p>
+      </div>
+      <div class="kpi-card" style="--kpi-c:var(--verde)">
+        <p class="eyebrow">Base con poco o ningún producto</p>
+        <div class="kpi-num">71%</div>
+        <p class="kpi-sub">De 860,223 clientes — ahí está la oportunidad mayor</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pipeline">
+    <div class="section-head">
+      <p class="eyebrow">Cómo se construyó</p>
+      <h2>Cuatro capas, cada una apoyada en la anterior</h2>
+      <p class="lede">El estudio avanza de la integración del dato hasta la cifra de negocio. Cada capa hereda las limitaciones honestas de la anterior en vez de esconderlas.</p>
+    </div>
+    <div class="steps">
+      <div class="step" style="--step-c:var(--azul)">
+        <span class="num">01 · Bronze</span>
+        <h3>Integración</h3>
+        <p>Siete fuentes combinadas en una sola base de 860,223 clientes. El historial cubre apenas ~13 meses, así que cada indicador viaja con su propio nivel de confianza.</p>
+        <span class="tag">ABT + banderas de confianza</span>
+      </div>
+      <div class="step" style="--step-c:var(--violeta)">
+        <span class="num">02 · Silver 0</span>
+        <h3>Segmentación</h3>
+        <p>K-means agrupa por comportamiento financiero, a propósito sin edad, género ni segmento. Confirma que el 71% de la base usa poco o ningún producto.</p>
+        <span class="tag">8 clusters</span>
+      </div>
+      <div class="step" style="--step-c:var(--verde)">
+        <span class="num">03 · Silver 1</span>
+        <h3>Propensión</h3>
+        <p>Modelo de clasificación que predice quién adopta la nueva app. Excluye variables demográficas para que la priorización no dependa del perfil del cliente.</p>
+        <span class="tag">PR-AUC 0.578 · lift 8.7×</span>
+      </div>
+      <div class="step" style="--step-c:var(--naranja)">
+        <span class="num">04 · Silver 2</span>
+        <h3>Monto potencial</h3>
+        <p>Modelo Gamma que estima cuánto invertiría cada cliente. A diferencia del anterior, sí usa edad, género y segmento, por parecido con inversionistas reales.</p>
+        <span class="tag">R² ~0.25 · correlación de rangos 0.50</span>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:22px">
+      <span class="icon">ƒ</span>
+      <p><b>valor_esperado_12m = probabilidad de adopción × monto potencial estimado.</b> Combinar ambas señales asume que son razonablemente independientes; la correlación de Spearman entre ellas es 0.234 — débil, no nula — lo que valida el supuesto solo de forma parcial.</p>
+    </div>
+  </section>
+
+  <section id="segmentacion">
+    <div class="section-head">
+      <p class="eyebrow">Silver 0 · K-means, 8 clusters</p>
+      <h2>Dónde está la base hoy, según su comportamiento financiero</h2>
+      <p class="lede">Los clusters se forman solo con comportamiento (ingresos, patrimonio, tenencia de productos). La edad, el género y el segmento se dejan fuera a propósito, y se usan después únicamente para describir a cada grupo.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 class="subhead">Tamaño de cada cluster</h3>
+        <div class="barlist">
+          <div class="barrow"><span class="label"><b>C0</b> · Bajo perfil financiero</span><div class="bartrack"><div class="barfill" style="--w:55.8%; --bar-c:var(--naranja)"></div></div><span class="val">17.7%</span></div>
+          <div class="barrow"><span class="label"><b>C1</b> · Ahorrador básico</span><div class="bartrack"><div class="barfill" style="--w:68.1%; --bar-c:var(--naranja)"></div></div><span class="val">21.6%</span></div>
+          <div class="barrow"><span class="label"><b>C2</b> · El más grande, invisible</span><div class="bartrack"><div class="barfill" style="--w:100%; --bar-c:var(--naranja)"></div></div><span class="val">31.7%</span></div>
+          <div class="barrow"><span class="label"><b>C3</b> · Inversionista digital</span><div class="bartrack"><div class="barfill" style="--w:20.8%; --bar-c:var(--verde)"></div></div><span class="val">6.6%</span></div>
+          <div class="barrow"><span class="label"><b>C4</b> · Ahorrador organizado</span><div class="bartrack"><div class="barfill" style="--w:37.9%; --bar-c:var(--verde)"></div></div><span class="val">12.0%</span></div>
+          <div class="barrow"><span class="label"><b>C5</b> · Vacío de dato</span><div class="bartrack"><div class="barfill" style="--w:4.1%; --bar-c:var(--rosa)"></div></div><span class="val">1.3%</span></div>
+          <div class="barrow"><span class="label"><b>C6</b> · Cliente de CDT</span><div class="bartrack"><div class="barfill" style="--w:9.5%; --bar-c:var(--verde)"></div></div><span class="val">3.0%</span></div>
+          <div class="barrow"><span class="label"><b>C7</b> · Cliente de fiducuenta</span><div class="bartrack"><div class="barfill" style="--w:18.9%; --bar-c:var(--verde)"></div></div><span class="val">6.0%</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="subhead">Composición de la base</h3>
+        <div class="stack">
+          <span style="width:71.0%; background:var(--naranja)">71.0%</span>
+          <span style="width:27.6%; background:var(--verde)">27.6%</span>
+          <span style="width:1.4%; background:var(--rosa)"></span>
+        </div>
+        <div class="stack-legend">
+          <div class="item"><span class="dot" style="background:var(--naranja)"></span>Poco o ningún producto (C0+C1+C2)</div>
+          <div class="item"><span class="dot" style="background:var(--verde)"></span>Ya activos en un producto (C3+C4+C6+C7)</div>
+          <div class="item"><span class="dot" style="background:var(--rosa)"></span>Vacío de dato (C5)</div>
+        </div>
+        <div class="callout warn">
+          <span class="icon">△</span>
+          <p><b>C5 no es un segmento real.</b> Es apenas el 1.3% de la base y refleja ausencia casi total de información financiera declarada, no un perfil de cliente genuino.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="propension">
+    <div class="section-head">
+      <p class="eyebrow">Silver 1 · Clasificación</p>
+      <h2>Quién es más probable que adopte la app</h2>
+      <p class="lede">El modelo evalúa a los ~796,000 clientes que aún no tienen el producto y prioriza por score continuo, no por un punto de corte fijo.</p>
+    </div>
+    <div class="card">
+      <div class="metric-strip">
+        <div class="metric" style="--metric-c:var(--azul)"><span class="n">0.578</span><span class="lbl">PR-AUC (desbalance ~2.5%)</span></div>
+        <div class="metric" style="--metric-c:var(--verde)"><span class="n">8.7×</span><span class="lbl">Lift en el decil superior</span></div>
+        <div class="metric" style="--metric-c:var(--violeta)"><span class="n">796K</span><span class="lbl">Prospectos evaluados</span></div>
+        <div class="metric" style="--metric-c:var(--naranja)"><span class="n">59.9%</span><span class="lbl">Adoptantes reales excluidos del entrenamiento</span></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3 class="subhead">Qué tanto pesa cada señal</h3>
+          <p class="lede" style="margin-bottom:14px; font-size:.86rem;">Importancia por permutación — caída en PR-AUC al mezclar la variable (holdout).</p>
+          <div class="barlist wide">
+            <div class="barrow"><span class="label">Ya tenía cuenta de ahorro antes del corte</span><div class="bartrack"><div class="barfill" style="--w:100%; --bar-c:var(--azul)"></div></div><span class="val">0.49</span></div>
+            <div class="barrow"><span class="label">Saldo histórico en fiducuenta</span><div class="bartrack"><div class="barfill" style="--w:67%; --bar-c:var(--azul)"></div></div><span class="val">0.33</span></div>
+            <div class="barrow"><span class="label">Saldo histórico en bolsillos</span><div class="bartrack"><div class="barfill" style="--w:51%; --bar-c:var(--azul)"></div></div><span class="val">0.25</span></div>
+            <div class="barrow"><span class="label">Ingresos mensuales</span><div class="bartrack"><div class="barfill" style="--w:47%; --bar-c:var(--azul)"></div></div><span class="val">0.23</span></div>
+            <div class="barrow"><span class="label">Ya tenía bolsillos antes del corte</span><div class="bartrack"><div class="barfill" style="--w:12%; --bar-c:var(--ink-faint)"></div></div><span class="val">0.06</span></div>
+            <div class="barrow"><span class="label">Patrimonio total</span><div class="bartrack"><div class="barfill" style="--w:2%; --bar-c:var(--ink-faint)"></div></div><span class="val">0.01</span></div>
+          </div>
+          <p style="font-size:.78rem; color:var(--ink-faint); margin-top:8px;">El resto de variables (CDT, cuenta corriente, saldo de ahorro histórico) aporta señal cercana a cero.</p>
+        </div>
+        <div>
+          <h3 class="subhead">Supuestos clave</h3>
+          <div class="barlist" style="gap:13px">
+            <p style="font-size:.86rem; color:var(--ink-soft)"><b style="color:var(--ink)">Proxy de adopción:</b> invesbot ∪ inversión virtual (no CDT).</p>
+            <p style="font-size:.86rem; color:var(--ink-soft)"><b style="color:var(--ink)">Sin demográficas:</b> se excluyen a propósito edad, género, segmento y tipo de vivienda.</p>
+            <p style="font-size:.86rem; color:var(--ink-soft)"><b style="color:var(--ink)">Evaluación:</b> PR-AUC y lift por decil, no accuracy (el desbalance lo exige).</p>
+          </div>
+        </div>
+      </div>
+      <div class="callout warn">
+        <span class="icon">△</span>
+        <p><b>El resultado no hereda neutralidad, aunque el diseño la buscó.</b> El grupo priorizado termina con más presencia de clientes mayores y del segmento plus, no porque el modelo use esas variables, sino porque el comportamiento activo que sí usa está naturalmente asociado a ese perfil.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="monto">
+    <div class="section-head">
+      <p class="eyebrow">Silver 2 · Regresión Gamma</p>
+      <h2>Cuánto invertiría cada cliente</h2>
+      <p class="lede">Entrenado solo sobre los 87,032 clientes (10.12% de la base) que ya tienen CDT, inversión virtual o invesbot, y aplicado al resto por parecido demográfico y financiero.</p>
+    </div>
+    <div class="card">
+      <div class="metric-strip">
+        <div class="metric" style="--metric-c:var(--azul)"><span class="n">~25%</span><span class="lbl">Varianza explicada (R²)</span></div>
+        <div class="metric" style="--metric-c:var(--verde)"><span class="n">0.504</span><span class="lbl">Correlación de rangos: ordena mejor de lo que predice el valor exacto</span></div>
+        <div class="metric" style="--metric-c:var(--violeta)"><span class="n">0.51</span><span class="lbl">Similitud máxima a un inversionista real (escala 0–1)</span></div>
+        <div class="metric" style="--metric-c:var(--naranja)"><span class="n">−8%</span><span class="lbl">Sesgo del modelo elegido en el decil top (vs. +19% de la alternativa)</span></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3 class="subhead">Qué explica el monto invertido</h3>
+          <p class="lede" style="margin-bottom:14px; font-size:.86rem;">Importancia por permutación: caída en deviance Gamma al mezclar la variable (holdout).</p>
+          <div class="barlist wide">
+            <div class="barrow"><span class="label">Patrimonio total</span><div class="bartrack"><div class="barfill" style="--w:100%; --bar-c:var(--azul)"></div></div><span class="val">0.305</span></div>
+            <div class="barrow"><span class="label">Saldo histórico en ahorro</span><div class="bartrack"><div class="barfill" style="--w:33%; --bar-c:var(--azul)"></div></div><span class="val">0.100</span></div>
+            <div class="barrow"><span class="label">Ingresos mensuales</span><div class="bartrack"><div class="barfill" style="--w:18%; --bar-c:var(--azul)"></div></div><span class="val">0.055</span></div>
+            <div class="barrow"><span class="label">Saldo histórico en fiducuenta</span><div class="bartrack"><div class="barfill" style="--w:11%; --bar-c:var(--ink-faint)"></div></div><span class="val">0.035</span></div>
+            <div class="barrow"><span class="label">Ingreso estimado por el banco</span><div class="bartrack"><div class="barfill" style="--w:10%; --bar-c:var(--ink-faint)"></div></div><span class="val">0.032</span></div>
+            <div class="barrow"><span class="label">Grupo de edad 65+</span><div class="bartrack"><div class="barfill" style="--w:10%; --bar-c:var(--ink-faint)"></div></div><span class="val">0.030</span></div>
+            <div class="barrow"><span class="label">Saldo histórico en bolsillos</span><div class="bartrack"><div class="barfill" style="--w:9%; --bar-c:var(--ink-faint)"></div></div><span class="val">0.028</span></div>
+            <div class="barrow"><span class="label">N.° de observaciones en bolsillos</span><div class="bartrack"><div class="barfill" style="--w:8%; --bar-c:var(--ink-faint)"></div></div><span class="val">0.025</span></div>
+          </div>
+          <p style="font-size:.78rem; color:var(--ink-faint); margin-top:8px;">El resto (edad 18-25/26-35/50-65, segmento preferencial, pasivos, brecha de ingreso) aporta menos de 0.02 cada una.</p>
+        </div>
+        <div>
+          <h3 class="subhead">Por qué sí usa variables demográficas</h3>
+          <p style="font-size:.87rem; color:var(--ink-soft)">Para un cliente que nunca ha invertido no hay comportamiento inversionista que observar directamente, la única aproximación disponible es qué tan parecido es a quienes sí invierten, y ese parecido se mide en parte por edad, género y segmento. Es una decisión consciente, distinta a la del modelo de propensión, y trae de vuelta ese tipo de sesgo en la etapa final del proceso.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="oportunidad">
+    <div class="section-head">
+      <p class="eyebrow">Modelos combinados</p>
+      <h2>Dimensionamiento de la oportunidad de negocio</h2>
+      <p class="lede">Multiplicar probabilidad de adopción por monto potencial da la cifra de negocio a doce meses. El rango mostrado solo captura la incertidumbre de calibración del modelo de monto. El margen de error real es más amplio.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 class="subhead">Volumen esperado, 12 meses</h3>
+        <div class="range-wrap">
+          <div class="range-label"><span class="name">Total base</span><span class="pt">$3.88B</span></div>
+          <div class="range-viz" style="--range-c:var(--amarillo)">
+            <div class="range-fill" style="left:25.7%; width:51.4%;"></div>
+            <div class="range-point" style="left:51.4%;"></div>
+          </div>
+          <div class="range-scale"><span>$3.70B</span><span>$4.05B</span></div>
+        </div>
+        <div class="range-wrap">
+          <div class="range-label"><span class="name">Decil 10 (~80,000 clientes)</span><span class="pt">$2.43B</span></div>
+          <div class="range-viz" style="--range-c:var(--violeta)">
+            <div class="range-fill" style="left:28%; width:44%;"></div>
+            <div class="range-point" style="left:52%;"></div>
+          </div>
+          <div class="range-scale"><span>$2.30B</span><span>$2.55B</span></div>
+        </div>
+        <p style="font-size:.78rem; color:var(--ink-faint); margin-top:4px;">Bandas = rango 95%. El decil 10 concentra 63% del valor total en el 10% de los prospectos.</p>
+      </div>
+      <div class="card">
+        <h3 class="subhead">Perfil del decil 10 frente al resto</h3>
+        <div class="cmp-block">
+          <p class="cmp-title">Clientes de 65 años o más</p>
+          <div class="cmp-row"><span class="tag">Decil 10</span><div class="bartrack"><div class="barfill" style="--w:100%; --bar-c:var(--violeta)"></div></div><span class="val">40.1%</span></div>
+          <div class="cmp-row"><span class="tag">Resto</span><div class="bartrack"><div class="barfill" style="--w:34.4%; --bar-c:var(--ink-faint)"></div></div><span class="val">13.8%</span></div>
+        </div>
+        <div class="cmp-block">
+          <p class="cmp-title">Segmento comercial "plus"</p>
+          <div class="cmp-row"><span class="tag">Decil 10</span><div class="bartrack"><div class="barfill" style="--w:100%; --bar-c:var(--violeta)"></div></div><span class="val">42%</span></div>
+          <div class="cmp-row"><span class="tag">Resto</span><div class="bartrack"><div class="barfill" style="--w:42.9%; --bar-c:var(--ink-faint)"></div></div><span class="val">18%</span></div>
+        </div>
+        <div class="cmp-block" style="margin-bottom:4px">
+          <p class="cmp-title">Segmento "preferencial" (el más alto por nombre)</p>
+          <div class="cmp-row"><span class="tag">Decil 10</span><div class="bartrack"><div class="barfill" style="--w:100%; --bar-c:var(--ink-faint)"></div></div><span class="val">~1–2%</span></div>
+          <div class="cmp-row"><span class="tag">Resto</span><div class="bartrack"><div class="barfill" style="--w:95%; --bar-c:var(--ink-faint)"></div></div><span class="val">~1–2%</span></div>
+        </div>
+        <p style="font-size:.78rem; color:var(--ink-faint);">Sin diferencia real: la sobrerrepresentación del decil 10 está en "plus", no en "preferencial".</p>
+      </div>
+    </div>
+    <div class="callout warn">
+      <span class="icon">⚑</span>
+      <p><b>Nota de idoneidad.</b> El modelo de monto identifica la edad (65+) como variable con peso propio, y el decil 10 sobrerrepresenta a este grupo frente al resto de la base. Antes de dirigir campañas de inversión a este grupo, el área de cumplimiento debería revisar si aplica algún criterio de idoneidad o protección al cliente de edad avanzada: el modelo prioriza por potencial financiero, no evalúa si el producto es adecuado para el perfil de riesgo de cada cliente.</p>
+    </div>
+  </section>
+
+  <section id="supuestos">
+    <div class="section-head">
+      <p class="eyebrow">Cómo leer los resultados</p>
+      <h2>Supuestos por capa</h2>
+      <p class="lede">Ningún resultado de este estudio es un hecho medido de forma directa — todos dependen de decisiones razonadas frente a una fuente de datos con apenas ~13 meses de historia. Estos son los supuestos que los sostienen.</p>
+    </div>
+
+    <details class="acc" open>
+      <summary><span class="badge" style="--acc-c:var(--azul)"></span>Bronze — integración de datos<span class="chev">›</span></summary>
+      <div class="acc-body"><ul>
+        <li>La ABT se construye con <b>estadísticos por cliente</b> (mediana, mínimo, máximo, estabilidad) en vez de tendencias, porque el panel es corto y disperso.</li>
+        <li>Cada estadístico viaja con su propio <b>indicador de confianza</b>, para que los modelos posteriores hereden esa honestidad en vez de esconderla.</li>
+        <li>Los outliers de patrimonio, activos y pasivos se corrigen con <b>winsorización dirigida</b> al percentil 99 entre tenedores del producto, no un recorte parejo.</li>
+        <li>Patrimonio o saldo negativo se lee como <b>capacidad de inversión ≈ 0</b> — una decisión de negocio, no un hecho matemático.</li>
+      </ul></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="badge" style="--acc-c:var(--violeta)"></span>Silver 0 — segmentación<span class="chev">›</span></summary>
+      <div class="acc-body"><ul>
+        <li><b>Sin variables demográficas</b> en la distancia (edad, género, tipo de vivienda), para agrupar por comportamiento y no por generación o género.</li>
+        <li><b>desc_segmento</b> se excluye del clustering por ser circular: ya lo deriva el banco del patrimonio/ingreso y se reserva para perfilar los clusters después.</li>
+        <li>A quien no tiene un producto se le asume <b>saldo 0</b>, no dato faltante, para mantener a todos en la misma escala.</li>
+        <li>Un flag se considera redundante frente a su saldo cuando <b>correlacionan ≥0.9</b>.</li>
+        <li><b>k=8</b> se elige dentro de un rango manejable para negocio (4–8), no por el óptimo puramente estadístico.</li>
+        <li>La búsqueda de k se apoya en una <b>muestra de 50,000 clientes</b>, validada después contra la población completa.</li>
+      </ul></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="badge" style="--acc-c:var(--verde)"></span>Silver 1 — propensión de adopción<span class="chev">›</span></summary>
+      <div class="acc-body"><ul>
+        <li><b>Proxy de adopción</b> = invesbot ∪ inversión virtual; CDT y bolsillos/fiducuenta no cuentan.</li>
+        <li><b>Umbral de 3 meses</b> de historia previa excluye al 59.9% de los adoptantes reales: los que adoptaron muy temprano en la ventana observada.</li>
+        <li><b>Sin variables demográficas</b> (edad, género, segmento, tipo de vivienda), excluidas a propósito para que la priorización no dependa del perfil.</li>
+        <li>Evaluación por <b>PR-AUC y lift por decil</b>, no por accuracy: el desbalance (~2.5%) lo vuelve engañoso.</li>
+        <li>Ventana de datos de ~13 meses frente a un horizonte de negocio pedido de 12, <b>apenas alcanza</b> para cubrir un ciclo de adopción.</li>
+      </ul></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="badge" style="--acc-c:var(--naranja)"></span>Silver 2 — monto potencial<span class="chev">›</span></summary>
+      <div class="acc-body"><ul>
+        <li>Se entrena solo sobre <b>87,032 clientes</b> (CDT, inversión virtual o invesbot) y se aplica al resto por parecido (look-alike).</li>
+        <li>El monto se mide con <b>dos regímenes</b>: ventana de 6 meses cuando la fecha de adopción es confiable, historial completo cuando no lo es.</li>
+        <li>La ventana de 6 meses se validó producto por producto: en <b>invesbot</b> el saldo sigue creciendo después, así que ahí la estimación probablemente se queda corta.</li>
+        <li>Se eligió un modelo <b>Gamma</b> (estima el promedio directamente) sobre log1p+corrección, porque la suma de miles de estimaciones solo es confiable si cada una es un promedio.</li>
+        <li>Este modelo <b>sí usa variables demográficas</b>, a diferencia del de propensión: porque es la única forma de aproximar a quien nunca ha invertido.</li>
+        <li>valor_esperado_12m asume <b>independencia parcial</b> entre probabilidad y monto (Spearman = 0.234, débil pero no nula).</li>
+        <li>La decisión de dividir el target por fecha de adopción se deja <b>sin pruebas adicionales</b>: el historial disponible es demasiado corto para sostener una validación más profunda por ahora.</li>
+      </ul></div>
+    </details>
+  </section>
+
+  <section id="limitaciones">
+    <div class="section-head">
+      <p class="eyebrow">Lo que el estudio no puede resolver con código</p>
+      <h2>Limitaciones del estudio</h2>
+      <p class="lede">Estas limitaciones son estructurales a la fuente de datos, no errores de implementación.</p>
+    </div>
+    <div class="card">
+      <div class="lim-list">
+        <div class="lim-item"><span class="lim-mark">1</span><p><b>Historia corta (~13 meses):</b> no permite validar los modelos fuera de tiempo ni estudiar tendencias reales de varios años.</p></div>
+        <div class="lim-item"><span class="lim-mark">2</span><p><b>Definiciones aproximadas, no verificables:</b> qué cuenta como adopción digital, o qué ventana representa mejor el comportamiento reciente, son decisiones razonadas sin forma de comprobarse con más certeza hoy.</p></div>
+        <div class="lim-item"><span class="lim-mark">3</span><p><b>El monto es extrapolación, no medición:</b> ningún cliente de la base se parece demasiado a un inversionista real (similitud máxima = 0.51 de 1); toda estimación para quien no invierte es una aproximación razonada.</p></div>
+        <div class="lim-item"><span class="lim-mark">4</span><p><b>Grupos pequeños en CDT e invesbot:</b> sus estimaciones de "adopción reciente" son las menos firmes de los tres productos.</p></div>
+        <div class="lim-item"><span class="lim-mark">5</span><p><b>Sesgo demográfico inconsistente entre modelos:</b> el de propensión evita depender de edad o segmento; el de monto sí los usa, y el resultado combinado hereda ese sesgo en la etapa final.</p></div>
+        <div class="lim-item"><span class="lim-mark">6</span><p><b>El rango de incertidumbre es un piso, no un techo:</b> solo cubre la calibración del modelo de monto: no incluye la incertidumbre del modelo de propensión ni el riesgo de extrapolación.</p></div>
+        <div class="lim-item"><span class="lim-mark">7</span><p><b>El cluster 5 (1.3%) no es un perfil real:</b> es un vacío de información financiera declarada; tratarlo como segmento genuino estaría mal fundamentado.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="recomendaciones">
+    <div class="section-head">
+      <p class="eyebrow">Próximos pasos</p>
+      <h2>Recomendaciones</h2>
+    </div>
+    <div class="grid-2">
+      <div class="rec-col tech">
+        <h3><span class="dot" style="background:var(--azul)"></span>Técnicas</h3>
+        <ol>
+          <li><b>Duplicar el horizonte de historia</b> y, con eso, validar ambos modelos fuera de tiempo, algo que hoy no es posible.</li>
+          <li>Establecer una <b>rutina de reentrenamiento</b> con las mismas pruebas de estabilidad y calibración cada vez que se actualicen los datos.</li>
+          <li>Resolver la <b>tensión demográfica entre modelos</b> como decisión explícita de negocio, no dejarla como diferencia de diseño no discutida.</li>
+          <li><b>Incorporar la incertidumbre del modelo de propensión</b> al rango de negocio, hoy limitado al modelo de monto.</li>
+          <li>Dar <b>tratamiento aparte al cluster 5</b>, posiblemente enriqueciendo sus registros con otras fuentes de ingreso.</li>
+          <li><b>Automatizar las validaciones manuales</b> (orden de ejecución, independencia de señales, calibración por grupo) de cara a repetir este proceso de forma periódica.</li>
+        </ol>
+      </div>
+      <div class="rec-col biz">
+        <h3><span class="dot" style="background:var(--verde)"></span>Negocio</h3>
+        <ol>
+          <li><b>Activar primero al 71%</b> de la base con poco o ningún producto, antes que enfocarse en quien ya invierte.</li>
+          <li>Aprovechar la <b>venta cruzada</b> dentro de la base ya activa: quien invierte hoy casi siempre lo hace en un solo producto.</li>
+          <li><b>Concentrar el esfuerzo comercial en el decil superior</b>, no repartirlo por igual: ahí vive la mayoría de la oportunidad real.</li>
+          <li>Buscar clientes con <b>relación activa y organizada</b> con el banco (ahorro, bolsillos, fiducuenta) antes que solo a los de mayor patrimonio.</li>
+          <li><b>Pasar por cumplimiento</b> antes de campañas al grupo prioritario, dada la alta presencia de clientes de edad avanzada.</li>
+          <li>A quienes ya adoptaron, tratarlos como <b>consolidación o migración</b>, no como prospecto nuevo.</li>
+          <li>Leer <b>$3.88B / $2.43B como orden de magnitud</b> para planear, no como cifra exacta de presupuesto.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>GitHub: <a href="https://github.com/lunajulio" target="_blank" rel="noopener noreferrer">github.com/lunajulio</a>.</p>
+</footer>
+
+<script>
+  (function(){
+    var btn = document.getElementById('themeBtn');
+    var root = document.documentElement;
+    var stored = null;
+    try { stored = localStorage.getItem('tablero-theme'); } catch(e){}
+    if (stored) root.setAttribute('data-theme', stored);
+    function current(){
+      return root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    btn.addEventListener('click', function(){
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('tablero-theme', next); } catch(e){}
+    });
+  })();
+
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('#pipelineNav a'));
+    var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting){
+          var id = '#' + entry.target.id;
+          links.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href') === id); });
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    sections.forEach(function(s){ if (s) io.observe(s); });
+  })();
+</script>
+
+</body>
+</html>
