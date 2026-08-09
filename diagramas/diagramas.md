@@ -12,7 +12,7 @@ La solución produce dos señales por cliente —**probabilidad de adopción** y
 
 Descripción del flujo con arquitectura Medallion para comprender cómo se construye la señal de priorización que alimenta los procesos CREAN. La capa **Bronze** integra las fuentes; la capa **Silver** produce dos modelos independientes —uno de propensión y otro de monto—; y la capa **Gold** combina ambos en un valor esperado que llega al tablero y a los procesos CREAN.
 
-![modelo de capas](diagramas\modelo_capas.png)
+![modelo de capas](modelo_capas.png)
 
 - **Bronze** integra 7 fuentes en una ABT única a nivel cliente (860,223 registros), con banderas de confianza que trazan qué tan completo es el histórico de cada fuente.
 - **Silver 0** segmenta toda la base solo por comportamiento (sin demografía) en 8 clusters vía K-means — revela que el 71% de los clientes no tiene hoy producto de inversión activo, el tamaño real de la bolsa de oportunidad.
@@ -24,7 +24,7 @@ Descripción del flujo con arquitectura Medallion para comprender cómo se const
 
 De izquierda a derecha: las fuentes se integran en una ABT gobernada, tres componentes analíticos leen de ella, sus salidas convergen en un motor de priorización, y ese motor alimenta directamente dos procesos CREAN. 
 
-![diagrama de procesos](diagramas\diagrama_procesos.png)
+![diagrama de procesos](diagrama_procesos.png)
 
 > ⚙️ Los dos puntos de decisión marcan lo que de verdad cambia el resultado: **cuánto presupuesto comercial recibe cada decil**, y **si el resultado real obliga a recalibrar el modelo**. Las líneas punteadas son gobierno/retroalimentación, no cómputo directo.
 
@@ -66,7 +66,7 @@ Cada nodo del diagrama tiene un dueño y, en dos casos, una pregunta que solo un
 
 *Generar* y *actualizar* no son el mismo evento. **Generar** es entrenar el modelo y ajustar sus parámetros con datos nuevos. **Actualizar** es aplicar un modelo ya entrenado sobre la base más reciente para refrescar los scores. 
 
-![esquema de operacion](diagramas\esquema_operacion.png)
+![esquema de operacion](esquema_operacion.png)
 
 > El anillo verde (Generar → Consumir → Seguimiento → Mantenimiento) es el ciclo que corre todos los meses sin intervención. El anillo violeta (Evolución) solo se activa cuando el seguimiento —el punto de decisión— detecta que el problema no se resuelve recalibrando, sino cambiando algo de fondo.
 

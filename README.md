@@ -3,7 +3,8 @@
 
 > Prueba técnica CREAN (Creación y Aceleración de Nuevos Negocios) · flujo de trabajo implementado para resolver el reto
 
-CREAN prepara el lanzamiento de una nueva app de inversiones para clientes actuales del banco, y necesita responder tres preguntas que hoy no tienen una visión integrada: **quién** es más probable que la adopte, **cuánto** invertiría, y **qué tan grande** es esa oportunidad de negocio. Este repositorio integra siete fuentes de datos financieros y demográficos, construye dos modelos analíticos sobre esa base, dimensiona la oportunidad resultante, y propone cómo esa solución opera dentro de los procesos de CREAN. Este documento resume el flujo de trabajo de punta a punta — el detalle técnico vive en los notebooks y en [diagramas.md](diagramas.md).
+CREAN prepara el lanzamiento de una nueva app de inversiones para clientes actuales del banco, y necesita responder tres preguntas que hoy no tienen una visión integrada: **quién** es más probable que la adopte, **cuánto** invertiría, y **qué tan grande** es esa oportunidad de negocio. Este repositorio integra siete fuentes de datos financieros y demográficos, construye dos modelos analíticos sobre esa base, dimensiona la oportunidad resultante, y propone cómo esa solución opera dentro de los procesos de CREAN. Este documento resume el flujo de trabajo de punta a punta.
+
 
 ## Cómo se resuelve cada requerimiento del reto
 
@@ -39,7 +40,7 @@ La solución se organiza como una **arquitectura medallion** (bronze → silver 
 - **Silver** — sobre esa ABT corren tres análisis independientes: segmentación de clientes, propensión de adopción y monto potencial de inversión.
 - **Gold** — la capa de negocio: combina propensión y monto en un valor esperado por cliente, listo para priorización comercial y consumo en el tablero.
 
-El detalle visual de este flujo, con las herramientas y variables de cada paso, está en [diagramas.md](diagramas.md).
+![modelo de capas](diagramas/modelo_capas.png)
 
 ## Herramientas utilizadas
 
@@ -77,11 +78,15 @@ El problema analítico (fases 1 a 4) queda resuelto con dos señales complementa
 
 ## Fase 5 · Modelo conceptual CREAN
 
-El modelo conceptual traza el mismo recorrido bronze → silver → gold, pero mostrando actores, flujos de información y puntos de decisión: cuándo un cliente sale del ranking por ya tener el producto, cuándo cae en el decil prioritario, y cuándo su perfil activa una revisión de cumplimiento. Está ligado a los procesos CREAN de afiliación, gestión de ingresos/gastos y administración de información. Detalle completo en [diagramas.md](diagramas.md).
+El modelo conceptual traza el mismo recorrido bronze → silver → gold, pero mostrando actores, flujos de información y puntos de decisión: cuándo un cliente sale del ranking por ya tener el producto, cuándo cae en el decil prioritario, y cuándo su perfil activa una revisión de cumplimiento. Está ligado a los procesos CREAN de afiliación, gestión de ingresos/gastos y administración de información. 
+
+![modelo de capas](diagramas/diagrama_procesos.png)
 
 ## Fase 6 · Esquema de operación
 
-Define cómo la solución se mantiene viva después de entregada: con qué frecuencia se generan y actualizan los scores, quién los consume, y qué dispara un reentrenamiento frente a un simple ajuste rutinario. Detalle completo en [diagramas.md](diagramas.md).
+Define cómo la solución se mantiene viva después de entregada: con qué frecuencia se generan y actualizan los scores, quién los consume, y qué dispara un reentrenamiento frente a un simple ajuste rutinario. 
+
+![modelo de capas](diagramas/esquema_operacion.png)
 
 ## Fase 7 · Tablero
 
